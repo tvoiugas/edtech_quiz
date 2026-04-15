@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Главная | Edtech{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .hero {
+        padding: 80px 0 60px;
+        text-align: center;
+        background: radial-gradient(circle at 50% -20%, var(--aglow), transparent 40%);
+    }
+    .hero h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 24px;
+        letter-spacing: -0.02em;
+    }
+    .hero p {
+        color: var(--dim);
+        font-size: 1.25rem;
+        max-width: 600px;
+        margin: 0 auto 40px;
+    }
+    .section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 32px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .section-title::after {
+        content: '';
+        height: 1px;
+        flex: 1;
+        background: var(--border);
+    }
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 60px;
+    }
+    .cat-card {
+        padding: 24px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    .cat-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-4px);
+        background: var(--bg3);
+    }
+
+    /* Улучшенный блок иконки */
+    .cat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: var(--rs);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        border: 1px solid var(--border);
+        transition: all 0.3s ease;
+    }
+    .cat-card:hover .cat-icon {
+        transform: scale(1.1) rotate(-5deg);
+    }
+
+    .cat-card h3 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.25rem;
+        margin-bottom: 12px;
+    }
+    .cat-card p {
+        color: var(--muted);
+        font-size: 0.875rem;
+        margin-bottom: 20px;
+        flex: 1;
+    }
+    .cat-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+    .stat {
+        font-size: 0.75rem;
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--dim);
+    }
+
+    /* Стили для бейджей сложности на основе цвета категории */
+    .diff-badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-family: 'JetBrains Mono';
+        font-weight: 700;
+    }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+<main class="container">
+    <section class="hero">
+        <h1>Прокачай свой <br><span>Tech Stack</span></h1>
+        <p>Интерактивные тесты для разработчиков. Проверь свои знания в Python, DevOps, Frontend и многом другом.</p>
+        <div style="display: flex; gap: 16px; justify-content: center;">
+            <a href="#categories" class="btn btn-primary btn-lg">Начать тест</a>
+            <a href="/leaderboard/" class="btn btn-ghost btn-lg">Рейтинг игроков</a>
+        </div>
+    </section>
+
+    <section id="categories" class="page">
+        <h2 class="section-title">Категории знаний</h2>
+        
+        <div class="category-grid">
+            {% for category in categories %}
+            <a href="/category/{{ category.slug }}/" class="card cat-card">
+                <div class="cat-icon" style="background: {{ category.color }}15; border-color: {{ category.color }}30; color: {{ category.color }};">
+                    {% if "bi-" in category.icon %}
+                        <i class="bi {{ category.icon }}"></i>
+                    {% else %}
+                        <span>{{ category.icon|default:"💻" }}</span>
+                    {% endif %}
+                </div>
+
+                <h3>{{ category.name }}</h3>
+                <p>{{ category.description|truncatechars:80 }}</p>
+                
+                <div class="cat-meta">
+                    <span class="diff-badge" style="background: {{ category.color }}20; color: {{ category.color }}; border: 1px solid {{ category.color }}40;">
+                        {{ category.difficulty_label|upper }}
+                    </span>
+                    <span class="stat">Вопросов: {{ category.get_question_count|default:"0" }}</span>
+                </div>
+            </a>
+            {% empty %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted);">
+                <p>Категории пока не загружены. Пожалуйста, запустите <code>seed_questions</code>.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Мой профиль | DevQuiz{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 40px;">
+        
+        <aside>
+            <div class="card" style="padding: 30px; text-align: center;">
+                <div style="width: 90px; height: 90px; background: {{ profile.avatar_color|default:'var(--bg3)' }}; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; border: 4px solid var(--bg); box-shadow: 0 0 0 2px var(--accent);">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div style="text-align: left; margin-bottom: 20px;">
+                        <label style="font-size: 0.7rem; color: var(--dim); font-family: 'JetBrains Mono';">ИМЯ</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: var(--text); margin-top: 5px;">
+                    </div>
+                    
+                    <div style="text-align: left; margin-bottom: 20px;">
+                        <label style="font-size: 0.7rem; color: var(--dim); font-family: 'JetBrains Mono';">GITHUB URL</label>
+                        <input type="url" name="github_url" value="{{ profile.github_url|default:'' }}" placeholder="https://github.com/..." style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: var(--text); margin-top: 5px;">
+                    </div>
+
+                    <div style="text-align: left; margin-bottom: 25px;">
+                        <label style="font-size: 0.7rem; color: var(--dim); font-family: 'JetBrains Mono';">О СЕБЕ</label>
+                        <textarea name="bio" rows="3" style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: var(--text); margin-top: 5px; resize: none; font-family: 'Inter'; font-size: 0.875rem;">{{ profile.bio|default:'' }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Сохранить изменения</button>
+                </form>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 25px 0;">
+                <a href="{% url 'logout' %}" class="btn btn-ghost" style="width: 100%; justify-content: center; color: var(--red);">Выйти из системы</a>
+            </div>
+        </aside>
+
+        <section>
+            <div style="margin-bottom: 40px;">
+                <span style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.875rem;">{{ level_icon }} LEVEL {{ level }}</span>
+                <h1 style="font-family: 'Syne', sans-serif; font-size: 2.5rem; margin-top: 5px;">{{ user.username }}</h1>
+                {% if profile.bio %}
+                    <p style="color: var(--dim); margin-top: 15px; font-size: 1.1rem; max-width: 600px;">{{ profile.bio }}</p>
+                {% endif %}
+            </div>
+
+            <h2 class="section-title">История тестов</h2>
+            <div class="card" style="overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--bg3); font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--muted);">
+                        <tr>
+                            <th style="text-align: left; padding: 15px 20px;">КАТЕГОРИЯ</th>
+                            <th style="text-align: center; padding: 15px 20px;">БАЛЛЫ</th>
+                            <th style="text-align: right; padding: 15px 20px;">ДАТА</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr style="border-top: 1px solid var(--border);">
+                            <td style="padding: 15px 20px; font-weight: 600;">{{ session.category.name }}</td>
+                            <td style="padding: 15px 20px; text-align: center;">
+                                <span class="badge" style="background: var(--bg3); color: var(--accent);">{{ session.score_percent }}%</span>
+                            </td>
+                            <td style="padding: 15px 20px; text-align: right; color: var(--muted); font-size: 0.875rem;">
+                                {{ session.completed_at|date:"d M Y" }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="padding: 40px; text-align: center; color: var(--muted);">
+                                Вы еще не завершили ни одного теста. 
+                                <br><br>
+                                <a href="{% url 'home' %}" class="btn btn-primary btn-sm">Начать сейчас</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+</main>
+{% endblock %}

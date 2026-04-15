@@ -1,0 +1,39 @@
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+.docker/
+# Игнорируем данные базы данных, если они проброшены в папку
+pgdata/
+
+# Environment variables (КРИТИЧЕСКОЕ)
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Odoo/Specific
+dump.sql
+*.bak

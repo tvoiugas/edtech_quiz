@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Вопрос {{ question_num }} | EdTech{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .quiz-container { max-width: 800px; margin: 40px auto; }
+    .progress-wrapper { margin-bottom: 32px; }
+    .progress-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; color: var(--dim); }
+    .progress-bar-bg { background: var(--bg3); height: 6px; border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { background: var(--accent); height: 100%; transition: width 0.4s ease; box-shadow: 0 0 10px var(--aglow); }
+    
+    .question-card { padding: 40px; }
+    .question-text { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 32px; line-height: 1.3; }
+    
+    /* Answer Buttons */
+    .answers-grid { display: flex; flex-direction: column; gap: 12px; }
+    .answer-opt { 
+        background: var(--bg); border: 1px solid var(--border); padding: 16px 20px; border-radius: var(--rs); 
+        cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px; text-align: left;
+        color: var(--text); font-family: 'Inter', sans-serif; font-size: 1rem; width: 100%;
+    }
+    .answer-opt:hover:not(:disabled) { border-color: var(--border-a); background: var(--bg3); transform: translateX(4px); }
+    .answer-opt.selected { border-color: var(--accent); background: var(--aglow); }
+    
+    /* Status Styles */
+    .answer-opt.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--green); color: var(--green); }
+    .answer-opt.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--red); color: var(--red); }
+    
+    /* Explanation Box */
+    #explanation-box { display: none; margin-top: 24px; padding: 20px; border-radius: var(--rs); background: var(--bg3); border-left: 4px solid var(--accent); animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .nav-actions { margin-top: 32px; display: flex; justify-content: flex-end; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="quiz-container">
+        <div class="progress-wrapper">
+            <div class="progress-info">
+                <span>{{ session.category.name }}</span>
+                <span>{{ question_num }} / {{ total_questions }}</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: {{ progress_percent }}%;"></div>
+            </div>
+        </div>
+
+        <div class="card question-card">
+            <h2 class="question-text">{{ question.text }}</h2>
+
+            <div class="answers-grid" id="answers-container">
+                {% for answer in answers %}
+                <button class="answer-opt" data-answer-id="{{ answer.id }}">
+                    <span style="font-family: 'JetBrains Mono'; opacity: 0.5;">0{{ forloop.counter }}</span>
+                    {{ answer.text }}
+                </button>
+                {% endfor %}
+            </div>
+
+            <div id="explanation-box">
+                <div style="font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--accent); margin-bottom: 8px;">EXPLANATION</div>
+                <p id="explanation-text" style="font-size: 0.9375rem; color: var(--dim);"></p>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-next" class="btn btn-primary btn-lg" style="display: none;">
+                    {% if question_num == total_questions %}Завершить{% else %}Далее{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const container = document.getElementById('answers-container');
+    const nextBtn = document.getElementById('btn-next');
+    const explanationBox = document.getElementById('explanation-box');
+    const explanationText = document.getElementById('explanation-text');
+    let answered = false;
+
+    container.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.answer-opt');
+        if (!btn || answered) return;
+
+        answered = true;
+        const answerId = btn.dataset.answerId;
+        
+        // Visual selection
+        btn.classList.add('selected');
+
+        try {
+            const response = await fetch("{% url 'submit_answer' session.id %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    answer_id: answerId,
+                    question_id: "{{ question.id }}",
+                    question_num: {{ question_num }}
+                })
+            });
+
+            const data = await response.json();
+
+            // Highlight Correct/Wrong
+            const allBtns = document.querySelectorAll('.answer-opt');
+            allBtns.forEach(b => {
+                b.disabled = true;
+                if (b.dataset.answerId == data.correct_answer_id) {
+                    b.classList.add('correct');
+                } else if (b.dataset.answerId == answerId && !data.is_correct) {
+                    b.classList.add('wrong');
+                }
+            });
+
+            // Show explanation
+            if (data.explanation) {
+                explanationText.textContent = data.explanation;
+                explanationBox.style.display = 'block';
+            }
+
+            // Show Next button
+            nextBtn.style.display = 'inline-flex';
+            nextBtn.onclick = () => window.location.href = data.next_url;
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при отправке ответа.');
+            answered = false;
+        }
+    });
+</script>
+{% endblock %}

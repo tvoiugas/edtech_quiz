@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: devquiz
+      POSTGRES_USER: devquiz
+      POSTGRES_PASSWORD: devquiz_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devquiz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: always
+    # We remove collectstatic and nginx dependencies
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py seed_questions &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True  # Keep this True while developing to see errors!
+      - DATABASE_URL=postgresql://devquiz:devquiz_secret@db:5432/devquiz
+      - SECRET_KEY=django-insecure-devquiz-super-secret-key-2026
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

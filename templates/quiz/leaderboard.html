@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Таблица лидеров | DevQuiz{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .leaderboard-container { max-width: 900px; margin: 40px auto; }
+    
+    /* Top 3 Podium */
+    .podium {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 20px;
+        margin-bottom: 60px;
+        padding-top: 40px;
+    }
+    .podium-item {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--rs);
+        padding: 30px 20px;
+        text-align: center;
+        flex: 1;
+        position: relative;
+        transition: transform 0.3s;
+    }
+    .podium-item:hover { transform: translateY(-5px); border-color: var(--accent); }
+    .podium-1 { order: 2; height: 280px; border-color: var(--yellow); box-shadow: 0 0 20px rgba(245, 158, 11, 0.1); }
+    .podium-2 { order: 1; height: 240px; }
+    .podium-3 { order: 3; height: 210px; }
+
+    .rank-badge {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-family: 'Syne';
+        background: var(--bg3);
+        border: 2px solid var(--border);
+    }
+    .podium-1 .rank-badge { background: var(--yellow); color: #000; border-color: var(--yellow); }
+    
+    .avatar-large {
+        width: 64px; height: 64px; border-radius: 50%;
+        margin: 0 auto 15px; display: flex; align-items: center;
+        justify-content: center; font-size: 1.5rem; font-weight: 800;
+    }
+
+    /* Table Styles */
+    .leader-table { width: 100%; border-collapse: collapse; }
+    .leader-table tr { border-bottom: 1px solid var(--border); transition: background 0.2s; }
+    .leader-table tr:hover { background: var(--bg3); }
+    .leader-table td, .leader-table th { padding: 16px 20px; text-align: left; }
+    .rank-col { width: 60px; font-family: 'JetBrains Mono'; color: var(--dim); }
+    .user-col { display: flex; align-items: center; gap: 12px; }
+    .score-col { text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="leaderboard-container">
+        <div style="text-align: center; margin-bottom: 50px;">
+            <h1 style="font-family: 'Syne', sans-serif; font-size: 2.5rem;">Таблица лидеров</h1>
+            <p style="color: var(--muted);">Лучшие разработчики по результатам тестов</p>
+        </div>
+
+        <div class="podium">
+            {% for top_user in top_users|slice:":3" %}
+                <div class="podium-item podium-{{ forloop.counter }}">
+                    <div class="rank-badge">{{ forloop.counter }}</div>
+                    <div class="avatar-large" style="background: {{ top_user.avatar_color|default:'var(--bg3)' }};">
+                        {{ top_user.user.username|slice:":1"|upper }}
+                    </div>
+                    <h3 style="font-family: 'Syne'; font-size: 1.1rem; margin-bottom: 5px;">{{ top_user.user.username }}</h3>
+                    <div style="color: var(--accent); font-weight: 700; font-size: 1.2rem;">{{ top_user.best_score }}%</div>
+                    <div style="font-size: 0.75rem; color: var(--muted); margin-top: 10px; font-family: 'JetBrains Mono';">
+                        {{ top_user.total_quizzes }} ТЕСТОВ
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <table class="leader-table">
+                <thead style="background: var(--bg3); font-size: 0.75rem; color: var(--muted); font-family: 'JetBrains Mono';">
+                    <tr>
+                        <th class="rank-col">#</th>
+                        <th>РАЗРАБОТЧИК</th>
+                        <th style="text-align: center;">ТЕСТОВ</th>
+                        <th class="score-col">ЛУЧШИЙ СЧЕТ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leader in top_users %}
+                    {% if forloop.counter > 3 %}
+                    <tr {% if leader.user == request.user %}style="background: rgba(99, 102, 241, 0.05);"{% endif %}>
+                        <td class="rank-col">{{ forloop.counter }}</td>
+                        <td>
+                            <div class="user-col">
+                                <div style="width: 32px; height: 32px; background: {{ leader.avatar_color|default:'var(--bg3)' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
+                                    {{ leader.user.username|slice:":1"|upper }}
+                                </div>
+                                <span>{{ leader.user.username }} {% if leader.user == request.user %}<small style="color: var(--accent);">(Вы)</small>{% endif %}</span>
+                            </div>
+                        </td>
+                        <td style="text-align: center; color: var(--dim); font-size: 0.9rem;">{{ leader.total_quizzes }}</td>
+                        <td class="score-col">{{ leader.best_score }}%</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}

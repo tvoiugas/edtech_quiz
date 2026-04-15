@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация | DevQuiz{% endblock %}
+
+{% block content %}
+<main class="container page" style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 40px;">
+        <h2 style="font-family: 'Syne', sans-serif; margin-bottom: 8px;">Создать аккаунт</h2>
+        <p style="color: var(--muted); font-size: 0.875rem; margin-bottom: 32px;">Присоединяйся к сообществу разработчиков.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.75rem; color: var(--dim); margin-bottom: 8px; font-family: 'JetBrains Mono';">
+                    {{ field.label|upper }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <p style="color: var(--red); font-size: 0.75rem; margin-top: 5px; font-family: 'Inter';">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+                {% if field.help_text %}
+                    <p style="color: var(--muted); font-size: 0.7rem; margin-top: 5px;">{{ field.help_text|safe }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <style>
+                input { width: 100%; background: var(--bg)!important; border: 1px solid var(--border)!important; border-radius: var(--rs)!important; padding: 12px!important; color: var(--text)!important; outline: none; transition: border-color 0.2s; }
+                input:focus { border-color: var(--accent)!important; }
+            </style>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px; margin-top: 10px;">Зарегистрироваться</button>
+        </form>
+
+        <div style="margin-top: 24px; text-align: center; font-size: 0.875rem;">
+            <span style="color: var(--muted);">Уже есть аккаунт?</span>
+            <a href="{% url 'login' %}" style="color: var(--accent); text-decoration: none; font-weight: 600; margin-left: 5px;">Войти</a>
+        </div>
+    </div>
+</main>
+{% endblock %}
